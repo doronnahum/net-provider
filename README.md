@@ -206,10 +206,10 @@ export default connect(mapStateToProps , null)(MyComponent);
 <NetProvider /\> will handle all for you, when your screen mount the component will fetch data from the server and provide to your function component a query status, data, actions and more...when the screen un mount netProvider will clean the store
 
 **props:**
-| key | type | info |
-|--|--|--|
-| loadData| object or array| This data is the payload for the action, this can be an object, for component that depend on one resource or array for component that depends on more than one resource. <br/> ***see action payload for more details** |
-| clearOnUnMount| boolean| default - True <br /> set false when you want to persist your data even when componentWillUnmount |
+
+ - **loadData** -  object or array - This data is the payload for the action, this can be an object, for component that depend on one resource or array for component that depends on more than one resource. <br/> ***see action payload for more details** 
+- **clearOnUnMount** - boolean -  default - True <br /> 
+- set false when you want to persist your data even when componentWillUnmount 
 
 
 ### NetProvider render methods and props
