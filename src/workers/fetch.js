@@ -25,14 +25,14 @@ const validateAction = function(targetKey, url, axiosInstanceToUse, customFetch)
 }
 
 export default function* fetch(action, crudType) {
-  const {targetKey, method = 'get', url, customAxiosInstance, customFetch, data, params, _dispatchId, boomerang, customHandleResponse, useResponseValues} = action.payload
+  const {targetKey, method = 'get', url, customAxiosInstance, customFetch, data, params, dispatchId, boomerang, customHandleResponse, useResponseValues} = action.payload
   const _isTargetExists = yield select(state => isTargetExists(state, targetKey))
   const requestStatus = httpRequestStatuses[crudType]
   const axiosInstanceToUse = customAxiosInstance || api;
   let finalResponse, lastRequestByTarget, currentData, refreshType;
   validateAction(targetKey, url, axiosInstanceToUse, customFetch);
 
-  const onStartPayload = { url, targetKey, status: requestStatus.start, error: null, loading: true, dispatchId: _dispatchId, boomerang }
+  const onStartPayload = { url, targetKey, status: requestStatus.start, error: null, loading: true, dispatchId: dispatchId, boomerang }
 
   if(crudType !== 'read') { // refreshType will be set from action.payload or from lastRead or default
     lastRequestByTarget = yield select(state => getLastRead(state, action.payload.targetKey))
@@ -71,9 +71,13 @@ export default function* fetch(action, crudType) {
       })
     }
     const dataFromResponse = customHandleResponse ? customHandleResponse(response) : response.data
+    let count;
+    if(action.payload.getCountFromResponse) {
+      count = yield call(action.payload.getCountFromResponse, response)
+    }
     // REQUEST SUCCESS
     finalResponse = { targetKey, status: requestStatus.success, error: null, loading: false, data: dataFromResponse }
-
+    if(typeof count === 'number') finalResponse.count = count;
     if(crudType !== 'read') {
       delete finalResponse.data // We did not want to replace list data with document data
 

@@ -53,6 +53,7 @@ export const getMapStateToProps = createSelector(
   }
 );
 const getSecondeArgument = (state, targetKey) => targetKey;
+
 export const getFetchObject = createSelector(
   [getCrudState, getSecondeArgument],
   (crudState, targetKey) => crudState[targetKey] || {}
@@ -65,7 +66,7 @@ export const getLastRead = createSelector(getFetchObject, fetchObject =>
   fetchObject.lastRead || {}
 );
 export const getErrorByKey = createSelector(getFetchObject, fetchObject =>
-  fetchObject.loading
+  fetchObject.error
 );
 export const getLoadingByKey = createSelector(getFetchObject, fetchObject =>
   fetchObject.loading
@@ -75,6 +76,9 @@ export const getCountByKey = createSelector(getFetchObject, fetchObject =>
 );
 export const getDataByKey = createSelector(getFetchObject, fetchObject =>
   fetchObject.data
+);
+export const getStatusByKey = createSelector(getFetchObject, fetchObject =>
+  fetchObject.status
 );
 export const isTargetExists = createSelector([getCrudState, getSecondeArgument], (crudState, targetKey) =>
   !!crudState[targetKey]

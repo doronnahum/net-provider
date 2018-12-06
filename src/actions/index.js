@@ -28,24 +28,31 @@ const SetParameters = (payload, crudType, crudPayload) => ({
 
 /**
  * @function fetch
- * @param {string} payload.key // 'key' is required - the key to set the Parameters in store
- * @param {string} payload.customKey // 'customKey' - Use customKey if the key is used to other react purpose like in a list
- * @param {string} payload.method // 'method' is one of : ['get' , 'post' , 'put' , 'delete']. default is get.
- * @param {string} payload.url // 'url` is the server URL that will be used for the request
- * @param {object} payload.params // `params` are the URL parameters to be sent with the request, Must be a plain object or a URLSearchParams object
- * @param {object} payload.data   // `data` is the data to be sent as the request body
- * @param {object} payload.dispatchId   // Optional - pass `dispatchId` that can help you track on your request
- * @param {func} payload.customHandleResponse // 'customHandleResponse' - if the data in response from server is not response.data then pass function that get the response and return the data
- * @param {object} payload.customAxiosInstance // 'customAxiosInstance' - pass if you want to use a different instance
- * @param {function} payload.onStart   // 'onStart' - Optional - call back that run on start
- * @param {function} payload.onEnd  // 'onEnd' -Optional - call back that run on success
- * @param {function} payload.onFailed  // 'onFailed' - Optional - call back that run on failed
- * @param {string} payload.refreshType
- * // syncType
- * 'local' - local will create/remove/update the local list manually, if the request failed the list data will be restore
- * 'server' - Default - server will refresh from server after each success create/remove/update
- * 'none' - The list will not be affected
- * @param {boolean} payload.useResponseValues // set true to update the list with data from server and not with the data that send to server
+* @param {string} payload.targetKey   <small> required </small>  the key to set the parameters in store
+* @param {string} payload.url  API endpoint - required only for the first action to this targetKey
+* @param {string} payload.method  one of ['get' , 'post' , 'put' , 'delete']
+	  method will set by default base the action type but you can override this
+	  defaults: Read() = 'get' | Create() = 'post' | Update() = 'put' | Delete() = 'delete'
+* @param {object} payload.params request  params
+* @param {object} payload.data request  params
+* @param {string} payload.dispatchId pass dispatch Id that can help you track your specific request
+* @param {func} payload.customHandleResponse   help us find the data from response when the structure is not response.data, this function will get the response from server and need to return the data
+* @param {func} payload.getCountFromResponse   help us find the count of your data from the response if it is possible
+* @param {object} payload.customAxiosInstance {object} when the default axios is not relevant pass  a different instance
+* @param {func} payload.customFetch - when you want to take the control of the fetch to your hand, can be useful for custom requests or for request that need to be handle by SDK or somthing else
+    your function will be call by saga like this
+    response = yield call(customFetch, { url, method, data, params, payload:  action.payload})
+* @param {func} onStart - call back that be call before the request
+* @param {func} payload.onEnd - call back that be call when request end
+* @param {func} payload.onFailed - call back that be call when request failed
+* @param {string} payload.refreshType  - one of ['local', 'server', 'none'] - <small>server is the default</small>
+    This parameter is relevant when we change a record inside a list, we let you decide how to keep your list update after any change(create,delete,update)
+    * local - when you dispatch request to server we will update the data Immediately, before we send the request to server, and if the request failed we will restore the change
+                this option save data transfer and good for user experience
+    *  server - in each success change on one of the records we will refresh all the list data.
+                this option is the default, it will ensure that your data sync with the server, this default because sometimes one change can influencing other parameters
+    * none - the list will not be affected
+* @param {boolean} payload.useResponseValues - - sometimes when we put data to server it will return us an object or a list of objects with the updating values, set true if this is the situation to set the result from server on store
  */
 
 /**
