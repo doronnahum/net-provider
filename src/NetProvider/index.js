@@ -20,6 +20,7 @@ class NetProvider extends React.Component {
       UpdateLocal: this.UpdateLocal.bind(this),
     }
     this.getTargetKey = this.getTargetKey.bind(this);
+    this.getUrl = this.getUrl.bind(this);
     this.sendRequest = this.sendRequest.bind(this);
   };
 
@@ -39,16 +40,21 @@ class NetProvider extends React.Component {
     if(loadData && loadData.targetKey) return loadData.targetKey
     if(loadData && loadData[0] && loadData[0].targetKey) return loadData[0].targetKey
   }
-  Read(res) { this.props._crudActions.Read({targetKey: this.getTargetKey(), ...res}) }
-  Refresh(res) { this.props._crudActions.Refresh({targetKey: this.getTargetKey(), ...res}) }
-  Create(res) { this.props._crudActions.Create({targetKey: this.getTargetKey(), ...res}) }
-  Update(res) { this.props._crudActions.Update({targetKey: this.getTargetKey(), ...res}) }
-  Delete(res) { this.props._crudActions.Delete({targetKey: this.getTargetKey(), ...res}) }
-  SetParameters(res) { this.props._crudActions.SetParameters({targetKey: this.getTargetKey(), ...res}) }
-  Clean(res) { this.props._crudActions.Clean({targetKey: this.getTargetKey(), ...res}) }
-  CreateLocal(res) { this.props._crudActions.CreateLocal({targetKey: this.getTargetKey(), ...res}) }
-  DeleteLocal(res) { this.props._crudActions.DeleteLocal({targetKey: this.getTargetKey(), ...res}) }
-  UpdateLocal(res) { this.props._crudActions.UpdateLocal({targetKey: this.getTargetKey(), ...res}) }
+  getUrl() {
+    const {loadData} = this.props
+    if(loadData && loadData.targetKey) return loadData.url
+    if(loadData && loadData[0] && loadData[0].url) return loadData[0].url
+  }
+  Read(res) { this.props._crudActions.Read({targetKey: this.getTargetKey(), url: this.getUrl(), url: this.getUrl(), ...res}) }
+  Refresh(res) { this.props._crudActions.Refresh({targetKey: this.getTargetKey(), url: this.getUrl(), ...res}) }
+  Create(res) { this.props._crudActions.Create({targetKey: this.getTargetKey(), url: this.getUrl(), ...res}) }
+  Update(res) { this.props._crudActions.Update({targetKey: this.getTargetKey(), url: this.getUrl(), ...res}) }
+  Delete(res) { this.props._crudActions.Delete({targetKey: this.getTargetKey(), url: this.getUrl(), ...res}) }
+  SetParameters(res) { this.props._crudActions.SetParameters({targetKey: this.getTargetKey(), url: this.getUrl(), ...res}) }
+  Clean(res) { this.props._crudActions.Clean({targetKey: this.getTargetKey(), url: this.getUrl(), ...res}) }
+  CreateLocal(res) { this.props._crudActions.CreateLocal({targetKey: this.getTargetKey(), url: this.getUrl(), ...res}) }
+  DeleteLocal(res) { this.props._crudActions.DeleteLocal({targetKey: this.getTargetKey(), url: this.getUrl(), ...res}) }
+  UpdateLocal(res) { this.props._crudActions.UpdateLocal({targetKey: this.getTargetKey(), url: this.getUrl(), ...res}) }
 
   componentWillUnmount() {
     const {loadData, clearOnUnMount} = this.props
