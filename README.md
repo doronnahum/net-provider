@@ -6,38 +6,51 @@ This package depend on redux-saga and can be run inside react and react-native p
 
 with net-provider you can read and update your DB is with less of code and less effort by using the set of ready actions or with the data component provider
 
+Demo:
+[![Edit redux-admin and net-provider](https://codesandbox.io/static/img/play-codesandbox.svg)](https://codesandbox.io/s/oj541xz8v9)
+
 ### Basic example
 ```jsx
-import {NetProvider} from  'net-provider'
+import  React  from  "react";
+import { NetProvider } from  "net-provider"; 
 
-class  Home extends  Component {
-render() {
-	return (
-		<NetProvider
-			loadData={{
-				url:  'products',
-				targetKey:  'products-screen',
-				params: {categoriy: 'showes'},
-			}}
-			>
-			{({data, error, lodaing, crudActions}) => {
-				if(error) return 'There was an error connecting to server'
-				return (
-					<div>
-						{lodaing && <Spin />}
-						<MyProductsComponent
-							data={data}
-							onRefresh={crudActions.Refresh}
-							onCreate={crudActions.Create}
-							onDelete={crudActions.Delete}
-							onUpdate={crudActions.Update}
-						/>
-					</div>
-				)
-			}
-		</NetProvider>
-	  )
-	}}
+export  default  class  NetProviderExample  extends  React.Component  {
+	render() {
+		return  (
+			<div>
+				<NetProvider
+					loadData={{
+					url:  "classes/Post",
+					targetKey:  "Post-screen",
+					customHandleResponse:  res  =>  res.data.results,
+					getCountFromResponse:  res  =>  res.data.count,
+					params: { limit:  5, count:  1 }
+					}}
+				>
+					{res  => {
+						const { data, error, loading, crudActions, count } =  res;
+						console.log({ res });
+						if  (!data  &&  loading)  return 'Loading...';
+						if  (error)  return  "There was an error connecting to server";
+						return  (
+							<div>
+								<h2>count: {count  ||  0}</h2>
+								{loading  && 'Loading...'}
+								<div>{data  &&  JsonView({ data })}</div>
+								<button  onClick={crudActions.Refresh}>Refresh</button  >
+								<button
+									onClick={() => crudActions.Create({ title:  "New at -"  +  Date.now(),like:  0})}
+								>
+									Create New
+								</button>
+							</div>
+					);
+				}}
+			</NetProvider>
+		</div>
+		);
+	}
+}
 ```
 ## Installation
 
@@ -103,8 +116,10 @@ dispatchAction.Read({url: 'users', targetKey: 'usersScreen'})
 And you can use it with out the dispatchAction provider, like this:
 if you want to put an action inside saga, use this option.
 ```
-import {Read} from  'net-provider/actions'
-dispatch(Read({url: 'users', targetKey: 'usersScreen'}))
+import {actions} from  'net-provider'
+dispatch(
+	actions.Read({url: 'users', targetKey: 'usersScreen'})
+)
 ```
 ### Actions list
 
@@ -186,22 +201,22 @@ store : {
 You can connect any component and find the data with our selectors, like that:
 ```jsx
 import { connect } from  'react-redux';
-import {getFetchObject} from  'net-provider/selectors';
+import {selectors} from  'net-provider';
 
 const postListTargetKey = 'Admin-posts-list' // This the target key from your action
 const mapStateToProps = state => ({
-  adminPostList: getFetchObject(state, postListTargetKey ),
+  adminPostList: selectors.getCrudObject(state, postListTargetKey ),
 });
 
 export default connect(mapStateToProps , null)(MyComponent);
 ```
 ***Selectors list:***
 - getCrudState(state) - will be return all the crud reducer
-- getFetchObject(state, TARGET_KEY) - - will be one object that include (data, status, error...)
-- getErrorByKey(state, TARGET_KEY)
-- getCountByKey(state, TARGET_KEY)
-- getDataByKey(state, TARGET_KEY)
-- getStatusByKey(state, TARGET_KEY)
+- getCrudObject(state, TARGET_KEY) - - will be one object that include (data, status, error...)
+- getError(state, TARGET_KEY)
+- getCount(state, TARGET_KEY)
+- getData(state, TARGET_KEY)
+- getStatus(state, TARGET_KEY)
 ## NetProvider component
 <NetProvider /\> will handle all for you, when your screen mount the component will fetch data from the server and provide to your function component a query status, data, actions and more...when the screen un mount netProvider will clean the store
 
