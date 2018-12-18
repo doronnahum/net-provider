@@ -9,7 +9,7 @@ with net-provider you can read and update your DB is with less of code and less 
 Demo:
 [![Edit redux-admin and net-provider](https://codesandbox.io/static/img/play-codesandbox.svg)](https://codesandbox.io/s/oj541xz8v9)
 
-### Basic example
+### NetProvider  Component Basic example
 ```jsx
 import  React  from  "react";
 import { NetProvider } from  "net-provider"; 
@@ -36,10 +36,12 @@ export  default  class  NetProviderExample  extends  React.Component  {
 							<div>
 								<h2>count: {count  ||  0}</h2>
 								{loading  && 'Loading...'}
-								<div>{data  &&  JsonView({ data })}</div>
+								<div>{data  &&  JSON.stringify(data)}</div>
 								<button  onClick={crudActions.Refresh}>Refresh</button  >
 								<button
-									onClick={() => crudActions.Create({ title:  "New at -"  +  Date.now(),like:  0})}
+									onClick={() => crudActions.Create({
+										data: { title:  "New at -"  +  Date.now(), like:  0}
+									})}
 								>
 									Create New
 								</button>
@@ -51,6 +53,65 @@ export  default  class  NetProviderExample  extends  React.Component  {
 		);
 	}
 }
+```
+### NetProvider  actions&selectors Basic example
+```jsx
+import  React  from  "react";
+import { connect } from  "react-redux";
+import { dispatchAction, selectors } from  "net-provider"; 
+
+const  TARGET_KEY  =  "Post-screen";
+
+class  DispatchActionsExample  extends  React.Component  {
+componentDidMount() {
+	dispatchAction.Read({
+		url:  "classes/Post",
+		targetKey:  TARGET_KEY,
+		customHandleResponse:  res  =>  res.data.results,
+		getCountFromResponse:  res  =>  res.data.count,
+		params: { limit:  5, count:  1 }
+	});
+}
+
+render() {
+	const { data, error, loading, count } =  this.props;
+	console.log({ res:  this.props });
+	if  (!data  &&  loading)  return  "Loading...";
+	if  (error)  return  "There was an error connecting to server";
+	return  (
+		<div>
+			<div>
+				<h2>count: {count  ||  0}</h2>
+				{loading  &&  "Loading..."}
+				<div>{data  &&  JSON.stringify(data)}</div>
+			<button onClick={()  =>  dispatchAction.Refresh({ targetKey:  TARGET_KEY })}>
+				Refresh
+			</button>
+			<button
+				onClick={()  => dispatchAction.Create({
+									targetKey:  TARGET_KEY,
+									data: { title:  "New at -"  +  Date.now(), like:  0 }
+								})
+						}
+				>
+				Create New
+			</button>
+			</div>
+		</div>
+	);
+}
+}
+const  mapStateToProps  =  (state, props)  => {
+const  fetch_obj  =  selectors.getCrudObject(state, TARGET_KEY);
+	return {
+		data:  fetch_obj.data,
+		count:  fetch_obj.count,
+		error:  fetch_obj.error,
+		loading:  fetch_obj.loading
+	};
+};
+
+export  default  connect(mapStateToProps,null)(DispatchActionsExample);
 ```
 ## Installation
 
@@ -141,6 +202,30 @@ dispatch(
 -  **data** {object}   request  params
 -  **dispatchId** {string} optional -pass dispatch Id that can help you track your specific request
 - **customHandleResponse**  {func}  help us find the data from response when the structure is not response.data, this function will get the response from server and need to return the data
+- **getCountRequestConfig** {func}- use it when you want to fetch the count from diffrent url, function that get (payload, response) => ({url, method, params, data})
+when you using this the getCountFromResponse is required and will run on this request response
+example:
+	```jsx
+	<NetProvider onLoad={{
+		url: 'products',
+		targetKey: 'productsScreen'
+		params: {filter: {active: 1}},
+		getCountRequestConfig: (actionPayload, response) => {
+			const  config  = {
+				url: actionPayload.url  +  '/count',
+				method: actionPayload.method,
+				}
+			const  filters  = getDeepObjectValue(response, 'config.params.filter')
+			if(filters) {
+				config.params  = {filters}
+			}
+			return  config
+		},
+		getCountFromResponse: (response) => {
+			return getDeepObjectValue(response,'data.count') ||  0
+		}
+	}} />
+	```
 - **getCountFromResponse**  {func}  help us find the count of your data from the response if it is possible
 - **customAxiosInstance** {object} when the default axios is not relevant pass  a different instance
 - **customFetch** {func} - when you want to take the control of the fetch to your hand, can be useful for custom requests or for request that need to be handle by SDK or somthing else
