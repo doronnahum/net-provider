@@ -7,16 +7,16 @@ import {Create, CreateLocal, Read, Refresh, Update, UpdateLocal, Delete, DeleteL
 import {getFetchObject, getCrudState, getErrorByKey, getLoadingByKey, getCountByKey, getDataByKey, getStatusByKey} from './selectors'
 
 export const actions = {
-    Create, CreateLocal, Read, Refresh, Update, UpdateLocal, Delete, DeleteLocal
+  Create, CreateLocal, Read, Refresh, Update, UpdateLocal, Delete, DeleteLocal
 }
 export const selectors = {
-    getCrudState,
-    'getCrudObject': getFetchObject,
-    'getError': getErrorByKey,
-    'getLoading': getLoadingByKey,
-    'getCount': getCountByKey,
-    'getData': getDataByKey,
-    'getStatus': getStatusByKey,
+  getCrudState,
+  'getCrudObject': getFetchObject,
+  'getError': getErrorByKey,
+  'getLoading': getLoadingByKey,
+  'getCount': getCountByKey,
+  'getData': getDataByKey,
+  'getStatus': getStatusByKey,
 }
 export {setDefaultIdKey, idKey} from './enum';
 export { setApiInstance, setApiInstanceHeaders } from './api';

@@ -80,9 +80,11 @@ export const getDataByKey = createSelector(getFetchObject, fetchObject =>
 export const getStatusByKey = createSelector(getFetchObject, fetchObject =>
   fetchObject.status
 );
+
 export const isTargetExists = createSelector([getCrudState, getSecondeArgument], (crudState, targetKey) =>
   !!crudState[targetKey]
 );
+
 // export const getDispatchId = createSelector(getImmutableDoc, dataImmutable =>
 //   dataImmutable.get('dispatchId')
 // );

@@ -1,7 +1,7 @@
-import { put, select, call } from 'redux-saga/effects';
+import { put, select, call, all } from 'redux-saga/effects';
 import { SetParameters, Refresh } from '../actions';
 import {api} from '../api'
-import { getLastRead, getDataByKey, isTargetExists } from '../selectors';
+import { getFetchObject } from '../selectors';
 import {httpRequestStatuses} from '../enum';
 import {errHandler} from '../errorHandler';
 
@@ -25,17 +25,19 @@ const validateAction = function(targetKey, url, axiosInstanceToUse, customFetch)
 }
 
 export default function* fetch(action, crudType) {
-  const {targetKey, method = 'get', url, customAxiosInstance, customFetch, data, params, dispatchId, boomerang, customHandleResponse, useResponseValues} = action.payload
-  const _isTargetExists = yield select(state => isTargetExists(state, targetKey))
+  const {targetKey, method = 'get', customAxiosInstance, customFetch, data, params, dispatchId, boomerang, customHandleResponse, useResponseValues} = action.payload
+  const fetchObject = yield select(state => getFetchObject(state, targetKey))
+  const _isTargetExists = !!fetchObject.url
+  let lastRequestByTarget = fetchObject.lastRead
+  const url = action.payload.url || (lastRequestByTarget && lastRequestByTarget.url)
   const requestStatus = httpRequestStatuses[crudType]
   const axiosInstanceToUse = customAxiosInstance || api;
-  let finalResponse, lastRequestByTarget, currentData, refreshType;
+  let finalResponse, currentData, refreshType;
   validateAction(targetKey, url, axiosInstanceToUse, customFetch);
 
   const onStartPayload = { url, targetKey, status: requestStatus.start, error: null, loading: true, dispatchId: dispatchId, boomerang }
 
   if(crudType !== 'read') { // refreshType will be set from action.payload or from lastRead or default
-    lastRequestByTarget = yield select(state => getLastRead(state, action.payload.targetKey))
     refreshType = getRefreshType(lastRequestByTarget, action.payload)
   }else{
     onStartPayload.lastRead = action.payload // lastRead was passed only by read Worker to creating the ability to Refresh the data in the future
@@ -43,7 +45,7 @@ export default function* fetch(action, crudType) {
 
   if(_isTargetExists && refreshType !== 'none' && !useResponseValues) { // In This case we want to update the data before the request and save currentData for case that response will fail
     // Save current data
-    currentData = yield select(state => getDataByKey(state, targetKey))
+    currentData = fetchObject.data
     // Update local
     yield put(SetParameters(onStartPayload, crudType, {...action.payload}))
   }else{
@@ -55,26 +57,32 @@ export default function* fetch(action, crudType) {
   // MAKE THE REQUEST
   try {
     let response = null
-    if(customFetch) {
-      response = yield call(customFetch, { url,
-        method,
-        data,
-        params,
-        payload: action.payload
-      })
-    }else{
-      response = yield call(axiosInstanceToUse.request, {
-        url,
-        method,
-        data,
-        params
-      })
+    let count = null;
+    const countConfig = !!action.payload.getCountRequestConfig && action.payload.getCountRequestConfig({actionPayload: action.payload, response, fetchObject})
+    // countConfig false when getCountRequestConfig is missing or user return false getCountRequestConfig to persist the same count
+    if(countConfig) {
+      const [_response, _count] = yield all([ // Fetch data and query for count
+        customFetch
+          ? call(customFetch, { url, method, data, params, payload: action.payload })
+          : call(axiosInstanceToUse.request, { url, method, data, params }),
+        call(axiosInstanceToUse.request, countConfig)
+      ])
+      response = _response
+      count = yield call(action.payload.getCountFromResponse, _count) // find count from response
+    }else{ // Not need to count, just fetch data
+      if(customFetch) {
+        response = yield call(customFetch, { url, method, data, params, payload: action.payload })
+      }else{
+        response = yield call(axiosInstanceToUse.request, { url, method, data, params })
+      }
     }
     const dataFromResponse = customHandleResponse ? customHandleResponse(response) : response.data
-    let count;
-    if(action.payload.getCountFromResponse) {
+    if(!action.payload.getCountRequestConfig && action.payload.getCountFromResponse) {
       count = yield call(action.payload.getCountFromResponse, response)
+    }else if(action.payload.getCountRequestConfig && !countConfig) {
+      count = fetchObject.count || 0;
     }
+
     // REQUEST SUCCESS
     finalResponse = { targetKey, status: requestStatus.success, error: null, loading: false, data: dataFromResponse }
     if(typeof count === 'number') finalResponse.count = count;
@@ -92,11 +100,33 @@ export default function* fetch(action, crudType) {
     }else{
       yield put(SetParameters(finalResponse))
     }
+
+    // if(action.payload.getCountRequestConfig) {
+    //   try {
+    //     const config = action.payload.getCountRequestConfig({actionPayload: action.payload, response, fetchObject})
+    //     if(!config) {
+    //       // when return false then persist last count
+    //       count = fetchObject.count || 0;
+    //     }else{
+    //       const countResponse = yield call(axiosInstanceToUse.request, config)
+    //       if(action.payload.getCountFromResponse) {
+    //         count = yield call(action.payload.getCountFromResponse, countResponse)
+    //       }else{
+    //         console.error('redux-admin, getCountFromResponse is required when using getCountRequestConfig')
+    //       }
+    //     }
+    //     yield put(SetParameters({targetKey, count}))
+    //   } catch (error) {
+    //     count = null
+    //   }
+    // }
+
     // RUN onEnd CALLBACK
     if(action.payload.onEnd) { action.payload.onEnd({action: finalResponse, response, data: dataFromResponse}) }
 
     return finalResponse
   } catch (error) {
+    console.log({error})
     errHandler(error)
     // REQUEST FAILED
     finalResponse = { targetKey, status: requestStatus.failed, error: error, loading: false }

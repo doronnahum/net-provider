@@ -37,6 +37,7 @@ const SetParameters = (payload, crudType, crudPayload) => ({
 * @param {object} payload.data request  params
 * @param {string} payload.dispatchId pass dispatch Id that can help you track your specific request
 * @param {func} payload.customHandleResponse   help us find the data from response when the structure is not response.data, this function will get the response from server and need to return the data
+* @param {func} payload.getCountRequestConfig   use it when you want to fetch the count from diffrent url, function that get ({actionPayload, response, fetchObject}) => ({url, method, params, data}) , to persist count return false
 * @param {func} payload.getCountFromResponse   help us find the count of your data from the response if it is possible
 * @param {object} payload.customAxiosInstance {object} when the default axios is not relevant pass  a different instance
 * @param {func} payload.customFetch - when you want to take the control of the fetch to your hand, can be useful for custom requests or for request that need to be handle by SDK or somthing else
