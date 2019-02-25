@@ -4,6 +4,7 @@ import {api} from '../api'
 import { getFetchObject } from '../selectors';
 import {httpRequestStatuses} from '../enum';
 import {errHandler} from '../errorHandler';
+import {defaultHandlers} from '../defaultsSettings';
 
 const getKey = function(action) {
   return action.payload.customKey || action.payload.key
@@ -25,7 +26,7 @@ const validateAction = function(targetKey, url, axiosInstanceToUse, customFetch)
 }
 
 export default function* fetch(action, crudType) {
-  const {targetKey, method = 'get', customAxiosInstance, customFetch, data, params, dispatchId, boomerang, customHandleResponse, useResponseValues} = action.payload
+  const {targetKey, method = 'get', customAxiosInstance, customFetch, data, params, dispatchId, boomerang, customHandleResponse, useResponseValues, headers} = action.payload
   const fetchObject = yield select(state => getFetchObject(state, targetKey))
   const _isTargetExists = !!fetchObject.url
   let lastRequestByTarget = fetchObject.lastRead
@@ -58,29 +59,31 @@ export default function* fetch(action, crudType) {
   try {
     let response = null
     let count = null;
+    const requestConfig = { url, method, data, params }
+    if(headers) requestConfig.headers = headers;
     const countConfig = !!action.payload.getCountRequestConfig && action.payload.getCountRequestConfig({actionPayload: action.payload, response, fetchObject})
     // countConfig false when getCountRequestConfig is missing or user return false getCountRequestConfig to persist the same count
     if(countConfig) {
       const [_response, _count] = yield all([ // Fetch data and query for count
         customFetch
-          ? call(customFetch, { url, method, data, params, payload: action.payload })
-          : call(axiosInstanceToUse.request, { url, method, data, params }),
+          ? call(customFetch, { ...requestConfig, payload: action.payload })
+          : call(axiosInstanceToUse.request, requestConfig),
         call(axiosInstanceToUse.request, countConfig)
       ])
       response = _response
       count = yield call(action.payload.getCountFromResponse, _count) // find count from response
     }else{ // Not need to count, just fetch data
       if(customFetch) {
-        response = yield call(customFetch, { url, method, data, params, payload: action.payload })
+        response = yield call(customFetch, { ...requestConfig, payload: action.payload })
       }else{
-        response = yield call(axiosInstanceToUse.request, { url, method, data, params })
+        response = yield call(axiosInstanceToUse.request, requestConfig)
       }
     }
-    const dataFromResponse = customHandleResponse ? customHandleResponse(response) : response.data
+    const dataFromResponse = customHandleResponse ? customHandleResponse(response) : defaultHandlers.customHandleResponse(response)
     if(!action.payload.getCountRequestConfig && action.payload.getCountFromResponse) {
       count = yield call(action.payload.getCountFromResponse, response)
     }else if(action.payload.getCountRequestConfig && !countConfig) {
-      count = fetchObject.count || 0;
+      count = defaultHandlers.getCountFromResponse(response) || fetchObject.count || 0;
     }
 
     // REQUEST SUCCESS

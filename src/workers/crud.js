@@ -2,7 +2,7 @@
 import { select } from 'redux-saga/effects';
 import fetchWorker from './fetch';
 import { getLastRead } from '../selectors';
-
+import {defaultUpdateMethod} from '../defaultsSettings'
 const getLastRequestUrl = function(action, lastRequestByTarget) {
   if(lastRequestByTarget) {
     if(lastRequestByTarget.id) {
@@ -43,7 +43,7 @@ export function* createWorker(action) {
 
 export function* updateWorker(action) {
   let url = yield getRequestUrl(action)
-  const actionPayload = Object.assign({method: 'put', url}, action.payload)
+  const actionPayload = Object.assign({method: defaultUpdateMethod, url}, action.payload)
   // MAKE THE FETCH REQUEST
   yield fetchWorker({payload: actionPayload}, 'update')
 }

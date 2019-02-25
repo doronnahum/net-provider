@@ -6,6 +6,7 @@ import saga from './saga'
 import {Create, CreateLocal, Read, Refresh, Update, UpdateLocal, Delete, DeleteLocal} from './actions'
 import {getFetchObject, getCrudState, getErrorByKey, getLoadingByKey, getCountByKey, getDataByKey, getStatusByKey} from './selectors'
 
+export {setDefaultHandlers, setDefaultUpdateMethod} from './defaultsSettings';
 export const actions = {
   Create, CreateLocal, Read, Refresh, Update, UpdateLocal, Delete, DeleteLocal
 }

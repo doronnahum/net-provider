@@ -25,10 +25,18 @@ class NetProvider extends React.Component {
   };
 
   componentDidMount () {
-    const {loadData} = this.props
+    const {loadData, targetKey} = this.props
     if(loadData) {
-      if(isArray(loadData)) loadData.forEach(req => this.sendRequest(req))
-      else this.sendRequest(loadData)
+      if(isArray(loadData)) {
+        loadData.forEach(req => this.sendRequest(req))
+      }else{
+        this.sendRequest(loadData)
+        if(targetKey && loadData.targetKey !== targetKey) {
+          console.warn('redux-admin error, loadData.targetKey !== this.props.targetKey')
+        }else if(targetKey && !loadData.targetKey) {
+          console.warn('redux-admin error, missing loadData.targetKey || this.props.targetKey')
+        }
+      }
     }
   };
   sendRequest(req) {

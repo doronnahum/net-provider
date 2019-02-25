@@ -35,6 +35,7 @@ const SetParameters = (payload, crudType, crudPayload) => ({
 	  defaults: Read() = 'get' | Create() = 'post' | Update() = 'put' | Delete() = 'delete'
 * @param {object} payload.params request  params
 * @param {object} payload.data request  params
+* @param {object} payload.headers request  headers
 * @param {string} payload.dispatchId pass dispatch Id that can help you track your specific request
 * @param {func} payload.customHandleResponse   help us find the data from response when the structure is not response.data, this function will get the response from server and need to return the data
 * @param {func} payload.getCountRequestConfig   use it when you want to fetch the count from diffrent url, function that get ({actionPayload, response, fetchObject}) => ({url, method, params, data}) , to persist count return false
