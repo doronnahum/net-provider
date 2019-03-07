@@ -2,6 +2,9 @@ let defaultHandlers = {
   customHandleResponse: res => res.data,
   getCountFromResponse: res => res.count,
 }
+let defaultConfig = {
+  useResponseValuesWhenFound: true,
+}
 let defaultUpdateMethod = 'put';
 
 /**
@@ -33,5 +36,6 @@ export {
   defaultHandlers,
   setDefaultHandlers,
   defaultUpdateMethod,
-  setDefaultUpdateMethod
+  setDefaultUpdateMethod,
+  defaultConfig
 }

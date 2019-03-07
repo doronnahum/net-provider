@@ -4,7 +4,7 @@ import {api} from '../api'
 import { getFetchObject } from '../selectors';
 import {httpRequestStatuses} from '../enum';
 import {errHandler} from '../errorHandler';
-import {defaultHandlers} from '../defaultsSettings';
+import {defaultHandlers, defaultConfig} from '../defaultsSettings';
 
 const getKey = function(action) {
   return action.payload.customKey || action.payload.key
@@ -44,9 +44,9 @@ export default function* fetch(action, crudType) {
     onStartPayload.lastRead = action.payload // lastRead was passed only by read Worker to creating the ability to Refresh the data in the future
   }
 
+  // Save current data
+  currentData = fetchObject.data
   if(_isTargetExists && refreshType !== 'none' && !useResponseValues) { // In This case we want to update the data before the request and save currentData for case that response will fail
-    // Save current data
-    currentData = fetchObject.data
     // Update local
     yield put(SetParameters(onStartPayload, crudType, {...action.payload}))
   }else{
@@ -79,7 +79,7 @@ export default function* fetch(action, crudType) {
         response = yield call(axiosInstanceToUse.request, requestConfig)
       }
     }
-    const dataFromResponse = customHandleResponse ? customHandleResponse(response) : defaultHandlers.customHandleResponse(response)
+    const dataFromResponse = customHandleResponse ? customHandleResponse(response) : defaultHandlers.customHandleResponse(response, crudType)
     if(!action.payload.getCountRequestConfig && action.payload.getCountFromResponse) {
       count = yield call(action.payload.getCountFromResponse, response)
     }else if(action.payload.getCountRequestConfig && !countConfig) {
@@ -90,12 +90,13 @@ export default function* fetch(action, crudType) {
     finalResponse = { targetKey, status: requestStatus.success, error: null, loading: false, data: dataFromResponse }
     if(typeof count === 'number') finalResponse.count = count;
     if(crudType !== 'read') {
-      delete finalResponse.data // We did not want to replace list data with document data
-
+      if(!Array.isArray(dataFromResponse) && Array.isArray(currentData)) {
+        delete finalResponse.data // We did not want to replace list data with document data
+      }
       if(refreshType === 'server') { // In This Case We Want To Refresh The List With NEw Data From Server
         yield put(SetParameters(finalResponse))
         yield put(Refresh({targetKey}))
-      }else if(useResponseValues) { // In This Case We Want To Update Local List With The Document Response From Server
+      }else if(useResponseValues || (defaultConfig.useResponseValuesWhenFound && finalResponse.data)) { // In This Case We Want To Update Local List With The Document Response From Server
         yield put(SetParameters(finalResponse, crudType, {...action.payload, data: dataFromResponse}))
       }else{ // refreshType === 'none' Then leave the list data as is
         yield put(SetParameters(finalResponse))
