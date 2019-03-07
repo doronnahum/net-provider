@@ -1,6 +1,6 @@
 {
   "name": "net-provider",
-  "version": "1.2.6",
+  "version": "1.2.7",
   "description": "net-provider React component",
   "main": "lib/index.js",
   "module": "es/index.js",
@@ -24,7 +24,7 @@
     "lodas": "^1.2.0",
     "react-redux": "^5.1.1",
     "redux": "^4.0.1",
-    "redux-saga": "^0.16.2",
+    "redux-saga": "1.0.1",
     "reselect": "^4.0.0"
   },
   "peerDependencies": {
