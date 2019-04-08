@@ -11,6 +11,7 @@ const getKey = function(action) {
 }
 
 const getRefreshType = function(lastRequest, payload) {
+  if(!payload.refreshType && !lastRequest) return 'none' // there is nothing to refresh;
   return payload.refreshType || (lastRequest && lastRequest.refreshType) || 'server'
 }
 

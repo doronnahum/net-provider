@@ -4,7 +4,7 @@ const getRelevantProps = (state, { loadData, targetKey, select, toSelect, select
   return { loadData, targetKey, select, toSelect, selectorComponent }
 };
 
-export const getCrudState = state => state.crud;
+export const getCrudState = state => (state.crud || {});
 
 const emptyObject = {};
 const getFetchObjectFromCrudState = function(crudState, targetKey, toSelect) {
@@ -22,7 +22,7 @@ export const getMapStateToProps = createSelector(
   [getCrudState, getRelevantProps],
   (crudState, props) => {
     let propsResponse = {}
-    const { loadData, targetKey, select, toSelect, selectorComponent } = props
+    const { loadData, targetKey, select, toSelect, selectorComponent } = props || {}
     if(selectorComponent) {
       if(select && select !== '') {
         const selectArr = select.split(',');
@@ -46,7 +46,7 @@ export const getMapStateToProps = createSelector(
           }
         })
       }
-      propsResponse = Object.assign(propsResponse, getFetchObjectFromCrudState(crudState, targetKey || loadData.targetKey, toSelect))
+      propsResponse = Object.assign(propsResponse, getFetchObjectFromCrudState(crudState, targetKey || (loadData && loadData.targetKey), toSelect))
     }
 
     return propsResponse

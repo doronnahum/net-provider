@@ -1,5 +1,5 @@
 let defaultHandlers = {
-  customHandleResponse: res => res.data,
+  customHandleResponse: res => (res.data || res),
   getCountFromResponse: res => res.count,
 }
 let defaultConfig = {

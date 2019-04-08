@@ -8,7 +8,7 @@ const getLastRequestUrl = function(action, lastRequestByTarget) {
     if(lastRequestByTarget.id) {
       return lastRequestByTarget.url
     }else{
-      return `${lastRequestByTarget.url}/${action.payload.id}`
+      return `${lastRequestByTarget.url}${action.payload.id ? `/${action.payload.id}` : ''}`
     }
   }
 }
