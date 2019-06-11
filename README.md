@@ -9,110 +9,143 @@ with net-provider you can read and update your DB is with less of code and less 
 Demo:
 [![Edit redux-admin and net-provider](https://codesandbox.io/static/img/play-codesandbox.svg)](https://codesandbox.io/s/oj541xz8v9)
 
-### NetProvider  Component Basic example
-```jsx
-import  React  from  "react";
-import { NetProvider } from  "net-provider"; 
+## 3 ways to work with net-provider
+### Query component
 
-export  default  class  NetProviderExample  extends  React.Component  {
+```jsx
+
+import  React, { Component } from  'react'
+import {dispatchAction, Query} from  'net-provider';
+const URL = '/me'
+export  default  class  HomeScreen  extends Component {
 	render() {
-		return  (
-			<div>
-				<NetProvider
-					loadData={{
-					url:  "classes/Post",
-					targetKey:  "Post-screen",
-					customHandleResponse:  res  =>  res.data.results,
-					getCountFromResponse:  res  =>  res.data.count,
-					params: { limit:  5, count:  1 }
-					}}
-				>
-					{res  => {
-						const { data, error, loading, crudActions, count } =  res;
-						console.log({ res });
-						if  (!data  &&  loading)  return 'Loading...';
-						if  (error)  return  "There was an error connecting to server";
-						return  (
-							<div>
-								<h2>count: {count  ||  0}</h2>
-								{loading  && 'Loading...'}
-								<div>{data  &&  JSON.stringify(data)}</div>
-								<button  onClick={crudActions.Refresh}>Refresh</button  >
-								<button
-									onClick={() => crudActions.Create({
-										data: { title:  "New at -"  +  Date.now(), like:  0}
-									})}
-								>
-									Create New
-								</button>
-							</div>
-					);
+		return (
+			<Query
+				query={{
+					targetKey: URL,
+					url: URL,
+					onEnd: ({data}) =>  alert('END')
 				}}
-			</NetProvider>
-		</div>
-		);
+			>
+			{({ data,
+				error,
+				loading,
+				crudActions,
+				count}) => {
+					return  <Text>
+						{data && JSON.stringify(data)}
+						{error && JSON.stringify(error)}
+						{loading && 'Loading'}
+						{count && count}
+					</Text>
+			}}
+		</Query>
+	)}}
+
+```
+
+  
+
+### Selector
+```jsx
+import  React, { Component } from  'react'
+import { connect } from  'react-redux';
+import {dispatchAction, selectors} from  'net-provider';
+ 
+const  URL = '/me'
+class  HomeScreen extends  Component {
+	componentDidMount() {
+		dispatchAction.Read({
+			targetKey: URL,
+			url: URL
+		})
+	}
+
+	componentWillUnmount() {
+		dispatchAction.Clean({targetKey: URL})
+	}
+
+	render() {
+		const {data, error, loading, count} = this.props;
+		return (
+			<Text>
+				Example:
+				{data && JSON.stringify(data)}
+				{error && JSON.stringify(error)}
+				{loading && 'Loading'}
+				{count && count}
+			</Text>
+		)
 	}
 }
-```
-### NetProvider  actions&selectors Basic example
-```jsx
-import  React  from  "react";
-import { connect } from  "react-redux";
-import { dispatchAction, selectors } from  "net-provider"; 
 
-const  TARGET_KEY  =  "Post-screen";
-
-class  DispatchActionsExample  extends  React.Component  {
-componentDidMount() {
-	dispatchAction.Read({
-		url:  "classes/Post",
-		targetKey:  TARGET_KEY,
-		customHandleResponse:  res  =>  res.data.results,
-		getCountFromResponse:  res  =>  res.data.count,
-		params: { limit:  5, count:  1 }
-	});
-}
-
-render() {
-	const { data, error, loading, count } =  this.props;
-	console.log({ res:  this.props });
-	if  (!data  &&  loading)  return  "Loading...";
-	if  (error)  return  "There was an error connecting to server";
-	return  (
-		<div>
-			<div>
-				<h2>count: {count  ||  0}</h2>
-				{loading  &&  "Loading..."}
-				<div>{data  &&  JSON.stringify(data)}</div>
-			<button onClick={()  =>  dispatchAction.Refresh({ targetKey:  TARGET_KEY })}>
-				Refresh
-			</button>
-			<button
-				onClick={()  => dispatchAction.Create({
-									targetKey:  TARGET_KEY,
-									data: { title:  "New at -"  +  Date.now(), like:  0 }
-								})
-						}
-				>
-				Create New
-			</button>
-			</div>
-		</div>
-	);
-}
-}
-const  mapStateToProps  =  (state, props)  => {
-const  fetch_obj  =  selectors.getCrudObject(state, TARGET_KEY);
+const  mapStateToProps = state  => {
+	const {data, error, loading, count} = selectors.getCrudObject(state, URL)
 	return {
-		data:  fetch_obj.data,
-		count:  fetch_obj.count,
-		error:  fetch_obj.error,
-		loading:  fetch_obj.loading
-	};
+		data, error, loading, count
+	}
 };
+export default connect(mapStateToProps, null)(HomeScreenN)
 
-export  default  connect(mapStateToProps,null)(DispatchActionsExample);
 ```
+
+  
+  
+  
+
+### Set state
+
+```jsx
+import  React, { Component } from  'react'
+import {dispatchAction, selectors} from  'net-provider';
+  
+const  URL = '/me'
+
+class  HomeScreen  extends  Component {
+	constructor(props){
+		super(props);
+		this.state= {
+			loading: false, data: null, error: null
+		};
+	};
+
+	componentDidMount() {
+		this.setState({loading: true})
+		dispatchAction.Read({
+			targetKey: URL,
+			url: URL,
+			// data: values,
+			onEnd: ({data}) => {
+			this.setState({loading: false,data, error: null})
+			},
+			onFailed: ({error}) => {
+			const  errorMessage = (error && error.response && error.response.data && error.response.data.message)|| 'oops something went wrong. please try again later'
+			this.setState({loading: false, error: errorMessage})}
+		})
+	}
+
+	componentWillUnmount() {
+		dispatchAction.Clean({targetKey: URL})
+	}
+
+	render() {
+	const {data, error, loading, count} = this.state;
+		return (
+			<Text>
+			Example:
+			{data && JSON.stringify(data)}
+			{error && JSON.stringify(error)}
+			{loading && 'Loading'}
+			{count && count}
+			</Text>
+		)
+	}
+}
+
+export  default  HomeScreen
+
+```
+
 ## Installation
 
  1. You can install net-provider with [NPM](https://npmjs.com/), [Yarn](https://yarnpkg.com/)
