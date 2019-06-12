@@ -24,7 +24,7 @@ export const getMapStateToProps = createSelector(
     let propsResponse = {}
     const { loadData, targetKey, select, toSelect, selectorComponent } = props || {}
     if(selectorComponent) {
-      if(select && select !== '') {
+      if(select && select.length > 0) {
         const selectArr = select.split(',');
         if(selectArr.length === 1) {
           propsResponse = Object.assign(propsResponse, getFetchObjectFromCrudState(crudState, select, toSelect))

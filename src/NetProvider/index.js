@@ -53,7 +53,7 @@ class NetProvider extends React.Component {
     if(loadData && loadData.targetKey) return loadData.url
     if(loadData && loadData[0] && loadData[0].url) return loadData[0].url
   }
-  Read(res) { this.props._crudActions.Read({targetKey: this.getTargetKey(), url: this.getUrl(), url: this.getUrl(), ...res}) }
+  Read(res) { this.props._crudActions.Read({targetKey: this.getTargetKey(), url: this.getUrl(), ...res}) }
   Refresh(res) { this.props._crudActions.Refresh({targetKey: this.getTargetKey(), url: this.getUrl(), ...res}) }
   Create(res) { this.props._crudActions.Create({targetKey: this.getTargetKey(), url: this.getUrl(), ...res}) }
   Update(res) { this.props._crudActions.Update({targetKey: this.getTargetKey(), url: this.getUrl(), ...res}) }

@@ -80,16 +80,16 @@ export const deleteLocal = function(state, action) {
    */
 export const updateLocal = function(state, action) {
   const targetKey = action.payload.targetKey
-  const _idKey = action.payload.idKey || idKey
+  // const _idKey = action.payload.idKey || idKey
   const nextState = produce(state, draftState => {
     if(draftState[targetKey]) {
       if(isArray(draftState[targetKey].data)) {
         if(action.payload.id) {
-          const itemIndex = draftState[targetKey].data.findIndex(item => item[_idKey] === action.payload.id)
-          let doc = draftState[targetKey].data[itemIndex]
-          if(typeof doc === 'object') {
-            doc = Object.assign(doc, action.payload.data)
-          }
+          // const itemIndex = draftState[targetKey].data.findIndex(item => item[_idKey] === action.payload.id)
+          // // let doc = draftState[targetKey].data[itemIndex]
+          // // if(typeof doc === 'object') {
+          // //   doc = Object.assign(doc, action.payload.data)
+          // // }
           if(!draftState[targetKey].updatedKeys) { draftState[targetKey].updatedKeys = {[action.payload.id]: ''} }
           draftState[targetKey].updatedKeys[action.payload.id] = getNewUpdatedKeys(draftState[targetKey].updatedKeys[action.payload.id], action.payload.data)
         }else{
