@@ -1,6 +1,11 @@
 
 # net-provider
 
+This package is no longer supported.
+i recommend on
+https://github.com/tannerlinsley/react-query
+as alternative
+
 
 This package depend on redux-saga and can be run inside react and react-native projects
 
